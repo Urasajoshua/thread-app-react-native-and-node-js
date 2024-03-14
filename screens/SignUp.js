@@ -5,10 +5,12 @@ import {
   Pressable,
   TextInput,
   SafeAreaView,
+  Alert,
 } from "react-native";
 import React, { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { FontAwesome6, Fontisto ,MaterialIcons} from "@expo/vector-icons";
+import axios from "axios";
 
 const SignUp = () => {
   const [email, setEmail] = useState("");
@@ -16,6 +18,26 @@ const SignUp = () => {
   const [name,setName] = useState("")
 
   const navigation = useNavigation();
+
+  const handleSignUp = ()=>{
+    const user = {
+      name:name,
+      email:email,
+      password:password,
+    }
+
+    axios.post("http://192.168.100.24:3000/register",user).then((response) =>{
+      console.log('this is response',response);
+      Alert.alert('signup success','')
+      setName("")
+      setEmail("")
+      setPassword("") 
+    }).catch((error)=>{
+      console.log(error.message);
+      Alert.alert('signup fail')
+    })
+   
+  }
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "white", padding: 30 }}>
       {/**thread logo */}
@@ -111,7 +133,7 @@ const SignUp = () => {
         </View>
 
         <Pressable
-          style={{ width: 200, borderWidth: 1, borderRadius: 10, padding: 10, margin: 10 ,backgroundColor:'black'}}
+          style={{ width: 200, borderWidth: 1, borderRadius: 10, padding: 10, margin: 10 ,backgroundColor:'black'}} onPress={handleSignUp}
         >
           <Text style={{ textAlign: "center", fontSize: 22,color:'white' }}>SignUp</Text>
         </Pressable>

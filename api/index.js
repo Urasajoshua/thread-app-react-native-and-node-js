@@ -9,6 +9,7 @@ const port = 3000;
 const cors = require("cors");
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+app.use(cors())
 const jwt = require("jsonwebtoken");
 
 mongoose
@@ -84,7 +85,7 @@ const sendVerificationToken = async (email, verificationToken) => {
 
 
 //endpoint to verify the user
-app.get('/verify:token', async (req, res) => {
+app.get('/verify/:token', async (req, res) => {
   try {
     const token = req.params.token
     const user = await User.findOne({ verificationToken: token })
@@ -99,5 +100,50 @@ app.get('/verify:token', async (req, res) => {
   } catch (error) {
     console.log('error geting token', error);
     res.status(500).json({ message: 'email verification fail' })
+  }
+})
+
+//generete secret key
+const generateSecretKey = () =>{
+  const secretKey = crypto.randomBytes(32).toString("hex")
+  return secretKey;
+}
+
+
+const secretKey = generateSecretKey();
+
+//endpoint to login
+app.post('/login',async (req,res) => {
+  try {
+    const {email , password} = req.body
+    //check if user exist
+    const user = await User.findOne({email:email})
+    if(!user){
+      return res.status(404).json({message: 'invalid user'})
+    }
+
+    if(user.password !== password){
+      return res.status(404).json({message:'invalid password'})
+    }
+
+    const token = jwt.sign({userId:user._id},secretKey)
+    return res.status(200).json({token})
+  } catch (error) {
+    
+  }
+})
+
+//all the users except the login users
+app.get("/users/:userId",async(req,res)=>{
+  try {
+    const loggedInUser = req.params.userId
+    User.find({_id:{$ne:loggedInUser}}).then((users)=>{
+      res.status(200).json(users)}).catch((error)=>{
+        res.status(500).json({message:'error fetching all users'})
+        console.log(error);
+      })
+  } catch (error) {
+    res.status(500).json({message:'error getting user'})
+    console.log(error);
   }
 })
